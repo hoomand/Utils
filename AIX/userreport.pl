@@ -1,8 +1,8 @@
+#!/usr/bin/perl
 # A script to generate user report on AIX 6.1
 # Courtesy of Brian Smith (https://www.ibm.com/developerworks/community/blogs/brian/entry/report_on_your_aix_users14?lang=en_us)
 # I have added sudo report and the badusers section :)
 #
-#!/usr/bin/perl
 use strict;
 use User::pwent;
 my ($user,$host,$line);
