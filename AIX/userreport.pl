@@ -18,72 +18,73 @@ if ($ARGV[0] ne "-noheader"){
 }
 
 while ($user = getpwent()){
-        my $userid = $user->name;
+    my $userid = $user->name;
 
 	# Add the users you don't want to process in @badusers array below
 	my @badusers = qw( );
 	if ( grep /^$userid$/, @badusers ){
 		next;
 	}
-        print "$host,", $user->name, ",", $user->uid, ",", $user->gecos, ",";
-        print $user->shell, ",", $user->dir, ",";
 
-        my ($pgrp,$groups,$login,$rlogin,$loginretries,$account_locked,$minage);
-        my ($maxage,$minlen,$time_last_login,$time_last_unsuccessful_login);
-        my ($host_last_login,$host_last_unsuccessful_login,$unsuccessful_login_count);
-        my ($date_pw_change,$pw_set,$sudo_permissions);
+	print "$host,", $user->name, ",", $user->uid, ",", $user->gecos, ",";
+	print $user->shell, ",", $user->dir, ",";
 
-        my @lsuser = `lsuser -f $userid`;
-        foreach $line (@lsuser){
-                chomp($line);
-                if ($line =~ /^\spgrp=(.*)$/) {$pgrp = $1;}
-                if ($line =~ /^\sgroups=(.*)$/) {($groups = $1) =~ s/,/:/g;}
-                if ($line =~ /^\slogin=(.*)$/) {$login = $1;}
-                if ($line =~ /^\srlogin=(.*)$/) {$rlogin = $1;}
-                if ($line =~ /^\sloginretries=(.*)$/) {$loginretries = $1;}
-                if ($line =~ /^\saccount_locked=(.*)$/) {$account_locked = $1;}
-                if ($line =~ /^\sminage=(.*)$/) {$minage = $1;}
-                if ($line =~ /^\smaxage=(.*)$/) {$maxage = $1;}
-                if ($line =~ /^\sminlen=(.*)$/) {$minlen = $1;}
-                if ($line =~ /^\stime_last_login=(.*)$/) {$time_last_login = &converttime($1);}
-                if ($line =~ /^\stime_last_unsuccessful_login=(.*)$/) {$time_last_unsuccessful_login = converttime($1);}
-                if ($line =~ /^\shost_last_login=(.*)$/) {$host_last_login = $1;}
-                if ($line =~ /^\shost_last_unsuccessful_login=(.*)$/) {$host_last_unsuccessful_login = $1;}
-                if ($line =~ /^\sunsuccessful_login_count=(.*)$/) {$unsuccessful_login_count = $1;}
-        }
+	my ($pgrp,$groups,$login,$rlogin,$loginretries,$account_locked,$minage);
+	my ($maxage,$minlen,$time_last_login,$time_last_unsuccessful_login);
+	my ($host_last_login,$host_last_unsuccessful_login,$unsuccessful_login_count);
+	my ($date_pw_change,$pw_set,$sudo_permissions);
 
-        $line = `usrck -bl $userid 2>&1 | awk '{print \$2}`;
-        chomp($line);
-        if ($line){
-                if (substr($line, 12, 1) eq "1"){
-                        $pw_set = "false";
-                }else{
-                        $pw_set = "true";
-                }
-        }else{
-                $pw_set = "true";
-        }
+	my @lsuser = `lsuser -f $userid`;
+	foreach $line (@lsuser){
+			chomp($line);
+			if ($line =~ /^\spgrp=(.*)$/) {$pgrp = $1;}
+			if ($line =~ /^\sgroups=(.*)$/) {($groups = $1) =~ s/,/:/g;}
+			if ($line =~ /^\slogin=(.*)$/) {$login = $1;}
+			if ($line =~ /^\srlogin=(.*)$/) {$rlogin = $1;}
+			if ($line =~ /^\sloginretries=(.*)$/) {$loginretries = $1;}
+			if ($line =~ /^\saccount_locked=(.*)$/) {$account_locked = $1;}
+			if ($line =~ /^\sminage=(.*)$/) {$minage = $1;}
+			if ($line =~ /^\smaxage=(.*)$/) {$maxage = $1;}
+			if ($line =~ /^\sminlen=(.*)$/) {$minlen = $1;}
+			if ($line =~ /^\stime_last_login=(.*)$/) {$time_last_login = &converttime($1);}
+			if ($line =~ /^\stime_last_unsuccessful_login=(.*)$/) {$time_last_unsuccessful_login = converttime($1);}
+			if ($line =~ /^\shost_last_login=(.*)$/) {$host_last_login = $1;}
+			if ($line =~ /^\shost_last_unsuccessful_login=(.*)$/) {$host_last_unsuccessful_login = $1;}
+			if ($line =~ /^\sunsuccessful_login_count=(.*)$/) {$unsuccessful_login_count = $1;}
+	}
 
-        $line = `lssec -f /etc/security/passwd -s $userid -a lastupdate | awk -F= '{print \$2}'`;
-        chomp($line);
-        if ($line){
-                $date_pw_change = &converttime($line);
-        }
+	$line = `usrck -bl $userid 2>&1 | awk '{print \$2}`;
+	chomp($line);
+	if ($line){
+			if (substr($line, 12, 1) eq "1"){
+					$pw_set = "false";
+			}else{
+					$pw_set = "true";
+			}
+	}else{
+			$pw_set = "true";
+	}
 
-        $sudo_permissions = "-";
-        if ($pw_set eq "true"){
-                $line = `su $userid -c 'sudo -l | grep -v "may run the follo"'`;
-                chomp($line);
-                if ($line){
-                        $line =~ y/\n/ /;
-                        $sudo_permissions = $line;
-                }
-        }
+	$line = `lssec -f /etc/security/passwd -s $userid -a lastupdate | awk -F= '{print \$2}'`;
+	chomp($line);
+	if ($line){
+			$date_pw_change = &converttime($line);
+	}
 
-        print "$pgrp,$groups,$login,$rlogin,$loginretries,$account_locked,$minage,";
-        print "$maxage,$minlen,$time_last_login,$time_last_unsuccessful_login,";
-        print "$host_last_login,$host_last_unsuccessful_login,$unsuccessful_login_count,";
-        print "$date_pw_change,$pw_set,$sudo_permissions\n";
+	$sudo_permissions = "-";
+	if ($pw_set eq "true"){
+			$line = `su $userid -c 'sudo -l | grep -v "may run the follo"'`;
+			chomp($line);
+			if ($line){
+					$line =~ y/\n/ /;
+					$sudo_permissions = $line;
+			}
+	}
+
+	print "$pgrp,$groups,$login,$rlogin,$loginretries,$account_locked,$minage,";
+	print "$maxage,$minlen,$time_last_login,$time_last_unsuccessful_login,";
+	print "$host_last_login,$host_last_unsuccessful_login,$unsuccessful_login_count,";
+	print "$date_pw_change,$pw_set,$sudo_permissions\n";
 }
 
 sub converttime{
