@@ -26,9 +26,6 @@ while ($user = getpwent()){
 		next;
 	}
 
-	print "$host,", $user->name, ",", $user->uid, ",", $user->gecos, ",";
-	print $user->shell, ",", $user->dir, ",";
-
 	my ($pgrp,$groups,$login,$rlogin,$loginretries,$account_locked,$minage);
 	my ($maxage,$minlen,$time_last_login,$time_last_unsuccessful_login);
 	my ($host_last_login,$host_last_unsuccessful_login,$unsuccessful_login_count);
@@ -81,6 +78,12 @@ while ($user = getpwent()){
 			}
 	}
 
+	# Replacing the possible comma used in gecos with _, or the columns printed out
+	# will be in wrong orders
+	(my $gecos = $user->gecos) =~ s/\,/_/g;
+
+	print "$host,", $user->name, ",", $user->uid, ",", $gecos, ",";
+	print $user->shell, ",", $user->dir, ",";
 	print "$pgrp,$groups,$login,$rlogin,$loginretries,$account_locked,$minage,";
 	print "$maxage,$minlen,$time_last_login,$time_last_unsuccessful_login,";
 	print "$host_last_login,$host_last_unsuccessful_login,$unsuccessful_login_count,";
