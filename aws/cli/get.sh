@@ -15,6 +15,9 @@ case "$1" in
 	"runningInstances")
 		aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,PublicDnsName]' --filters Name=instance-state-name,Values=running --output text
 		;;
+	"regions")
+		aws ec2 describe-regions --query 'Regions[*].{Region:RegionName}' --output text
+		;;
 	*)
 		usage
 		;;
